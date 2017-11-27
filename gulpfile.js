@@ -26,11 +26,15 @@ gulp.task('copy:images', function (done) {
 gulp.task('copy:fonts', function (done) {
     gulp.src(['./front/asset/fonts/*']).pipe(gulp.dest('./front/dist/fonts')).on('end', done);
 });
+//将字体图标拷贝到目标目录
+gulp.task('copy:libs', function (done) {
+    gulp.src(['./front/asset/libs/*']).pipe(gulp.dest('./front/dist/libs')).on('end', done);
+});
 
 gulp.task('css',function(callback){
 	gulp.src(['.front/asset/css/*.css'])
         .pipe(concat('style.min.css'))
-		    .pipe(cssmin())
+        .pipe(cssmin())
         .pipe(gulp.dest('./front/dist/'))
         .on('end', callback);
 });
@@ -38,16 +42,17 @@ gulp.task('css',function(callback){
 gulp.task('less', function (callback) {
     gulp.src(['.front/asset/css/*.less'])
         .pipe(less())
+        .pipe(concat('less.min.css'))
         .pipe(cssmin())
         .pipe(gulp.dest('.front/dist/'))
         .on('end', callback);
 });
 
 gulp.task('watch', function (callback) {
-    gulp.watch(['./front/asset/**/*','./front/asset/*'], ['build','css','less'])
+    gulp.watch(['./front/**/**/*','./front/**/*'], ['build','css','less'])
         .on('end', callback);
 });
 
-gulp.task('default',['build','css','less','copy:images','copy:fonts']);
+gulp.task('default',['build','css','less','copy:images','copy:fonts','copy:libs']);
 //开发
-gulp.task('dev', ['build', 'css','less','copy:images','copy:fonts','watch']);
+gulp.task('dev', ['build', 'css','less','copy:images','copy:fonts','copy:libs','watch']);
