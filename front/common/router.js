@@ -33,12 +33,12 @@ var Utils = require('./utils.js');
 		if(!this.$ele)return;
  		if(Utils.isObject(handler)){
 			if(handler.hasOwnProperty('initialize')){
-				this.$ele.innerHTML = '<div>'+handler.initialize(params.query)+'</div>';
+				this.$ele.innerHTML = handler.initialize(params.query);
 			}
  		}else if(Utils.isFunction(handler)){
-			this.$ele.innerHTML = '<div>'+handler.call(params.query)+'</div>';
+			this.$ele.innerHTML = handler.call(params.query);
  		}else{
-			this.$ele.innerHTML = '<div>'+handler+'</div>';
+			this.$ele.innerHTML = handler;
  		}
  	}else{
  		location.hash = '';

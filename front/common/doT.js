@@ -81,6 +81,8 @@
 				}
 			});
 			var v = new Function("def", "return " + code)(def);
+			var _code = code.substring(4);
+			v = "<div name='"+_code+"'>"+v+"</div>";
 			return v ? resolveDefs(c, v, def) : v;
 		});
 	}
@@ -93,7 +95,6 @@
 		c = c || doT.templateSettings;
 		var cse = c.append ? startend.append : startend.split, needhtmlencode, sid = 0, indv,
 			str  = (c.use || c.define) ? resolveDefs(c, tmpl, def || {}) : tmpl;
-		//console.log(str);
 		str = ("var out='" + (c.strip ? str.replace(/(^|\r|\n)\t* +| +\t*(\r|\n|$)/g," ")
 					.replace(/\r|\n|\t|\/\*[\s\S]*?\*\//g,""): str)
 			.replace(/'|\\/g, "\\$&")
@@ -122,7 +123,6 @@
 			.replace(/\n/g, "\\n").replace(/\t/g, '\\t').replace(/\r/g, "\\r")
 			.replace(/(\s|;|\}|^|\{)out\+='';/g, '$1').replace(/\+''/g, "");
 			//.replace(/(\s|;|\}|^|\{)out\+=''\+/g,'$1out+=');
-		//console.log(str);
 		if (needhtmlencode) {
 			if (!c.selfcontained && _globals && !_globals._encodeHTML) _globals._encodeHTML = doT.encodeHTMLSource(c.doNotSkipEncoded);
 			str = "var encodeHTML = typeof _encodeHTML !== 'undefined' ? _encodeHTML : ("

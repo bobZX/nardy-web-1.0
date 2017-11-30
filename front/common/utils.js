@@ -41,24 +41,80 @@ var Utils = (function(){
             }
         },
         extend:function(destination,source){
-            destination = destination || {};
-            if (source) {
-                for (var property in source) {
-                    var value = source[property];
-                    if (value !== undefined) {
-                        destination[property] = value;
+            var options, name, src, copy, copyIsArray, clone;
+            var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false;
+
+            // Handle a deep copy situation
+            if (this.isBool(target)) {
+                deep = target;
+                target = arguments[i] || {};
+                i++;
+            }
+            // Handle case when target is a string or something (possible in deep copy)
+            if (typeof target !== 'object' && !this.isFunction(target)) {
+                target = {};
+            }
+            // Extend Util itself if only one argument is passed
+            if (i === length) {
+                target = this;
+                i--;
+            }
+            for (; i < length; i++) {
+                // Only deal with non-null/undefined values
+                if ((options = arguments[i]) != null) {
+                    // Extend the base object
+                    for (name in options) {
+                        src = target[name];
+                        copy = options[name];
+
+                        // Prevent never-ending loop
+                        if (target === copy) {
+                            continue;
+                        }
+
+                        // Recurse if we're merging plain objects or arrays
+                        if (deep && copy && (this.isObject(copy) || (copyIsArray = this.isArray(copy)))) {
+                            if (copyIsArray) {
+                                copyIsArray = false;
+                                clone = src && this.isArray(src) ? src : [];
+
+                            } else {
+                                clone = src && this.isObject(src) ? src : {};
+                            }
+
+                            // Never move original objects, clone them
+                            target[name] = this.extend(deep, clone, copy);
+                        }
+                        // Don't bring in undefined values
+                        else if (copy !== undefined) {
+                            target[name] = copy;
+                        }
                     }
                 }
-
-                var sourceIsEvt = typeof window.Event == "function"
-                    && source instanceof window.Event;
-
-                if (!sourceIsEvt
-                    && source.hasOwnProperty && source.hasOwnProperty("toString")) {
-                    destination.toString = source.toString;
-                }
             }
-            return destination;
+            // Return the modified object
+            return target;
+        },
+        gset:function(data,name,value){
+            if (name) {
+                var ns = name.split('.');
+                while (ns.length > 1 && data.hasOwnProperty(ns[0])) {
+                    data = data[ns.shift()];
+                }
+                name = ns[0];
+            } else {
+                return data;
+            }
+
+            if (typeof value !== 'undefined') {
+                data[name] = value;
+                return;
+            } else {
+                return data[name];
+            }
+        },
+        isBool:function(bool){
+            return typeof bool === 'boolean';
         },
         isObject:function(obj){
             return isType(obj,"Object");
@@ -71,6 +127,43 @@ var Utils = (function(){
         },
         isFunction:function(obj){
             return isType(obj,"Function");
+        },
+        each:function(iterator, callback, context){
+            var i, ret;
+            if (!context) {
+                context = this;
+            }
+            // 数组
+            if (this.isArray(iterator)) {
+                for (i = 0; i < iterator.length; i++) {
+                    ret = callback.call(context, iterator[i], i, iterator);
+                    // 回调返回 false 退出循环
+                    if (ret === false) {
+                        break;
+                    }
+                    // 回调返回 null 从原数组删除当前选项
+                    if (ret === null) {
+                        iterator.splice(i, 1);
+                        i--;
+                    }
+                }
+
+            } else if (this.isObject(iterator)) {
+                var keys = Object.keys(iterator);
+                for (i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    ret = callback.call(context, iterator[key], key, iterator);
+
+                    // 回调返回 false 退出循环
+                    if (ret === false) {
+                        break;
+                    }
+                    // 回调返回 null 从原对象删除当前选项
+                    if (ret === null) {
+                        delete iterator[key];
+                    }
+                }
+            }
         }
     }
 })()

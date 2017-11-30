@@ -5,16 +5,29 @@ var btn_group = require('../../component/button_group.html');
 var Home = Controller.vm('home',{
     data:function(){
         return {
+            type:'page',
             user:{
                name:'test',
                 age:'29'
             },
-            btns:['按钮1','按钮2','按钮3']
+            btns:[{
+                name:'bnt1',
+                type:'delete'
+            },{
+               name:'btn2',
+                type:'add'
+            }]
         }
     },
     tpl:tpl,
     components:{
         'btn_group':btn_group
+    },
+    watch:{
+        'btns':function(value,oldVal){
+            console.log(value);
+            console.log(oldVal);
+        },
     },
     methods:{
         sayWords:function(e){
@@ -23,7 +36,11 @@ var Home = Controller.vm('home',{
             this.sayHello();
         },
         sayHello:function(){
-            alert(this.user.name);
+            console.log('set btns');
+            var btns = this.get('btns');
+            for(var i=0;i<btns.length;i++){
+                btns[i] = {name:'newBtn'+i};
+            }
         }
     }
 })
