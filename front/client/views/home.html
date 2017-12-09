@@ -1,5 +1,15 @@
 <h1>Home Page</h1>
 <h2>{{=it.type}}</h2>
-{{##def.cv:param:param#}}
+<button onclick="{{=it.callSay}}">callSay</button>
+{{##def.component:param:
+    {{#def[param]}}
+#}}
+{{##def.cpn=['button_group','button_group']#}}
 
-{{#def.btn_group}}
+{{#script:
+var r = '';
+for(var i=0;i<def.cpn.length;i++){
+    r+=def[def.cpn[i]];
+}
+return r;
+}}

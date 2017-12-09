@@ -6,7 +6,7 @@ var reg_model = /\{\{\s*[!~?=]+?it.([\w$]+)[^\}\s]*\}\}/g;
 //控制对象集合，全局可见，用于视图事件回调
 var cset = window.CSet = (function(){
     return {
-        add:function(cObj,id){
+        addController:function(cObj,id){
             if(this.hasOwnProperty(id))
                 delete this[id];
             this[id] = cObj;
@@ -15,7 +15,7 @@ var cset = window.CSet = (function(){
     }
 })();
 
-var Controller = function (options) {
+var Controller = function (options,isComponent) {
 
     if(!options.tpl){
         if(!options.ele){
@@ -30,9 +30,9 @@ var Controller = function (options) {
         return;
     }
     var data = options.data.call(this);
+    this._id = options.ele || options._id_;
     if(options.methods){
-        var id = options.ele || options._id_;
-        var scope = cset.add(this,id);
+        var scope = cset.addController(this,this._id);
         Utils.each(options.methods, function (callback,func) {
             this[func] = callback;
             data[func] = scope+'.'+ func +'(event)';
@@ -43,26 +43,33 @@ var Controller = function (options) {
     this.data = data;
     this._observe(this.data);
 
-    var tpl,view_name;
+    var tpl,view_name,html='';
     this.components = options.components;
-    tpl = dot.template(options.tpl,null,this.components);
-    var html = tpl(this.data);
-    if(options.ele){
-        var $ele = document.getElementById(options.ele);
-        $ele.setAttribute('name',options.ele);
-        $ele.innerHTML = html;
-        view_name = options.ele;
-    }else{
-        html = '<div name="view_tab">'+html+'</div>';
-        view_name = "view_tab";
+    this.tpl = options.tpl;
+    view_name = this._id;
+    if(!isComponent) {
+        var components = getChildProp(options.components,'tpl',new Object());
+        tpl = dot.template(options.tpl, null, components);
+        var _data = getChildProp(options.components,'data',new Object());
+        html = tpl(Utils.extend({},this.data,_data));
+        if (options.ele) {
+            var $ele = document.getElementById(options.ele);
+            $ele.setAttribute('name', options.ele);
+
+            $ele.innerHTML = html;
+        } else {
+            html = '<div name="view_tab">' + html + '</div>';
+            view_name = "view_tab";
+        }
+
     }
     this.view = html;
 
-    this.model_tpl = {};
-    this.addModelTpl(options.tpl,view_name);
+    this.model_tpl = {}//数据模型依赖模板缓存;
+    this.addModelTpl(options.tpl,view_name,false);
     if(options.components){
         Utils.each(options.components,function(tpl,view_name){
-            this.addModelTpl(tpl,view_name);
+            this.addModelTpl(tpl,view_name,true);
         },this)
     }
 
@@ -134,7 +141,7 @@ Controller.prototype._watch = function(data,name,callback){
     }
 }
 
-Controller.prototype.addModelTpl = function(tpl,view_name){
+Controller.prototype.addModelTpl = function(tpl,view_name,isComponent){
     var rs = tpl.toString().match(reg_model);
     if(rs&&rs.length){
         for(var i=0;i<rs.length;i++){
@@ -146,7 +153,8 @@ Controller.prototype.addModelTpl = function(tpl,view_name){
             }
             this.model_tpl[m].push({
                 tpl:tpl,
-                name:view_name
+                name:view_name,
+                isComponent:isComponent
             })
         }
     }
@@ -156,7 +164,6 @@ Controller.prototype.rerender = function(model_name){
     if(this.model_tpl.hasOwnProperty(model_name)){
         try {
             var mtpls = this.model_tpl[model_name];
-            //TODO mtpls存在嵌套，子节点不需要重复渲染
             for(var k=0;k<mtpls.length;k++){
                 var mtpl = mtpls[k];
                 var tpl = dot.template(mtpl.tpl, null, this.components);
@@ -166,6 +173,9 @@ Controller.prototype.rerender = function(model_name){
                     var $ele = $eles[i];
                     $ele.innerHTML = html;
                 }
+                //是容器重绘时，容器中子组件不需要重新绘制
+                if(!mtpl.isComponent)
+                    break;
             }
         }catch(e){
             console.error(e.message);
@@ -182,6 +192,11 @@ Controller.instance = function(id,options){
             return c.view;
         }
     }
+}
+
+Controller.component = function(id,options){
+    options._id_ = id;
+    return new Controller(options,true);
 }
 
 //数据对象依赖
@@ -216,7 +231,7 @@ Watcher.prototype = {
         var oldVal = this.value;
         if(value!=oldVal){
             this.value = value;
-            this.callback.call(this.vm,value,oldVal,getTName(this.callback.name));
+            this.callback.call(this.vm,value,oldVal,getHeadName(this.callback.name));
         }
     },
     get:function(){
@@ -227,12 +242,37 @@ Watcher.prototype = {
     }
 }
 
-function getTName(name){
+//获取对象名称头部
+function getHeadName(name){
     var i = name.indexOf('.')
     if(i>-1){
         name = name.substring(0,i);
     }
     return name;
+}
+
+//获取子模板对象的属性集合
+function getChildProp(children,prop,result){
+    if(result&&Utils.isObject(children)){
+        Utils.each(children,function(child,name){
+            if(Utils.isObject(child)&&child.hasOwnProperty(prop)){
+                var o;
+                if(Utils.isObject(child[prop])){
+                    o = child[prop];
+                }else{
+                    o = new Object();
+                    o[name] = child[prop];
+                }
+                result = Utils.extend(result,o);
+            }else{
+                return result;
+            }
+            if(child.hasOwnProperty('components')){
+                getChildProp(child['components'],prop,result);
+            }
+        })
+        return result;
+    }
 }
 
 module.exports = Controller;
