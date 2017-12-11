@@ -17,6 +17,7 @@ var Utils = require('./utils.js');
 
  var Router = function(ele){
  	 this.routes = {};
+	 this.lastHandler = null;
 	 this.$ele = null;
 	 if(ele)
  		this.$ele = document.getElementById(ele);
@@ -33,13 +34,18 @@ var Utils = require('./utils.js');
 		if(!this.$ele)return;
  		if(Utils.isObject(handler)){
 			if(handler.hasOwnProperty('initialize')){
-				this.$ele.innerHTML = handler.initialize(params.query);
+				this.$ele.innerHTML = handler.initialize(params.query).view;
 			}
  		}else if(Utils.isFunction(handler)){
 			this.$ele.innerHTML = handler.call(params.query);
  		}else{
 			this.$ele.innerHTML = handler;
  		}
+ 		if(this.lastHandler&&this.lastHandler.hasOwnProperty('destory')){
+			this.lastHandler.destory();
+			this.lastHandler = null;
+			this.lastHandler = handler;
+		}
  	}else{
  		location.hash = '';
  	}

@@ -2,6 +2,7 @@ var Utils = require('./utils')
 var dot = require('./doT');
 
 var reg_model = /\{\{\s*[!~?=]+?it.([\w$]+)[^\}\s]*\}\}/g;
+var cid = 0,target;
 
 //控制对象集合，全局可见，用于视图事件回调
 var cset = window.CSet = (function(){
@@ -15,7 +16,30 @@ var cset = window.CSet = (function(){
     }
 })();
 
-var Controller = function (options,isComponent) {
+var dotRender = (function(){
+    return {
+        render:function(tpl,data){
+            var r = '';
+            if(Utils.isObject(tpl)){
+                var _data;
+                if(tpl._props_.length){
+                    _data = Utils.copyPropByNames(data,tpl._props_);
+                }else{
+                    _data = data;
+                }
+                var c = tpl.initialize(_data);
+                if(target)cset[target].children.push(c._id);
+                r = c.view;
+            }else{
+                var t = dot.template(tpl);
+                r = t(data);
+            }
+            return r;
+        }
+    }
+})()
+
+var Controller = function (options) {
 
     if(!options.tpl){
         if(!options.ele){
@@ -43,35 +67,26 @@ var Controller = function (options,isComponent) {
     this.data = data;
     this._observe(this.data);
 
-    var tpl,view_name,html='';
-    this.components = options.components;
-    this.tpl = options.tpl;
-    view_name = this._id;
-    if(!isComponent) {
-        var components = getChildProp(options.components,'tpl',new Object());
-        tpl = dot.template(options.tpl, null, components);
-        var _data = getChildProp(options.components,'data',new Object());
-        html = tpl(Utils.extend({},this.data,_data));
-        if (options.ele) {
-            var $ele = document.getElementById(options.ele);
-            $ele.setAttribute('name', options.ele);
-
-            $ele.innerHTML = html;
-        } else {
-            html = '<div name="view_tab">' + html + '</div>';
-            view_name = "view_tab";
-        }
-
-    }
-    this.view = html;
+    var tpl,view_name = this._id,html='';
 
     this.model_tpl = {}//数据模型依赖模板缓存;
-    this.addModelTpl(options.tpl,view_name,false);
-    if(options.components){
-        Utils.each(options.components,function(tpl,view_name){
-            this.addModelTpl(tpl,view_name,true);
-        },this)
+    this.addModelTpl(options.tpl,view_name);
+
+    this.components = options.components;
+    this.tpl = options.tpl;
+    this.children = [];
+    target = this._id;
+    var preRender = Utils.extend(dotRender,this.components,this.data);
+    tpl = dot.template(this.tpl, null, preRender);
+    html = tpl(this.data);
+    if (options.ele) {
+        var $ele = document.getElementById(options.ele);
+        $ele.setAttribute('name', options.ele);
+        $ele.innerHTML = html;
+    } else {
+        html = '<div name="'+view_name+'">' + html + '</div>';
     }
+    this.view = html;
 
     if(options.watch){
         Utils.each(options.watch,function(callback,name){
@@ -141,27 +156,53 @@ Controller.prototype._watch = function(data,name,callback){
     }
 }
 
-Controller.prototype.addModelTpl = function(tpl,view_name,isComponent){
-    var rs = tpl.toString().match(reg_model);
-    if(rs&&rs.length){
-        for(var i=0;i<rs.length;i++){
-            var reg = new RegExp(reg_model);
-            reg.exec(rs[i]);
-            var m = RegExp.$1;
-            if(!this.model_tpl.hasOwnProperty(m)){
+Controller.prototype.addModelTpl = function(tpl,view_name,models){
+    if(!models){
+        var rs = tpl.toString().match(reg_model);
+        if(rs&&rs.length){
+            for(var i=0;i<rs.length;i++){
+                var reg = new RegExp(reg_model);
+                reg.exec(rs[i]);
+                var m = RegExp.$1;
+                if(!this.model_tpl.hasOwnProperty(m)){
+                    this.model_tpl[m] = [];
+                }
+                this.model_tpl[m].push({
+                    tpl:tpl,
+                    name:view_name,
+                    isComponent:false
+                })
+            }
+        }
+    }else{
+        for(var i=0;i<models.length;i++){
+            var m = models[i];
+            f(!this.model_tpl.hasOwnProperty(m)){
                 this.model_tpl[m] = [];
             }
             this.model_tpl[m].push({
-                tpl:tpl,
                 name:view_name,
-                isComponent:isComponent
+                isComponent:true
             })
         }
     }
 }
 
+//销毁
+Controller.prototype.destory = function(){
+    if(this.children.length){
+        Utils.each(this.children,function(child){
+            cset[child].destroy();
+        })
+    }
+    this.data = null;
+    this.components = null;
+    this.model_tpl  = null;
+    delete cset[this._id];
+}
+
 Controller.prototype.rerender = function(model_name){
-    if(this.model_tpl.hasOwnProperty(model_name)){
+    if(model_name&&this.model_tpl.hasOwnProperty(model_name)){
         try {
             var mtpls = this.model_tpl[model_name];
             for(var k=0;k<mtpls.length;k++){
@@ -180,16 +221,53 @@ Controller.prototype.rerender = function(model_name){
         }catch(e){
             console.error(e.message);
         }
+    }else{
+        for(var i=0;i<this.children.length;i++){
+            cset[this.children[i]].destory();
+        }
+        target = this._id;
+        var preRender = Utils.extend(dotRender,this.components,this.data);
+        var tpl = dot.template(this.tpl, null, preRender);
+        var html = tpl(this.data);
+        this.view = html;
+        var $eles = document.getElementsByName(this._id);
+        for (var i = 0; i < $eles.length; i++) {
+            var $ele = $eles[i];
+            $ele.innerHTML = html;
+        }
     }
 }
 
 Controller.instance = function(id,options){
+    var _ids = [];
     return {
-        initialize:function(params){
-            options.data.params = params;
-            options._id_ = id;
+        initialize:function(data){
+            var _id = options._id_ = id+'_'+(cid++);
+            _ids.push(_id);
             var c = new Controller(options);
+            c.data = Utils.extend(c.data,data);
             return c.view;
+        },
+        destroy:function(){
+            for(var i=0;i<_ids.length;i++){
+                cset[_ids[i]].destory();
+            }
+        }
+    }
+}
+
+Controller.component = function(id,options){
+    var _props = [];
+    if(options.props){
+        _props = Array.prototype.slice.call(options.props);
+    }
+    return {
+        _props_:_props,
+        initialize:function(data){
+            options._id_ = id+'_'+(cid++);
+            var c = new Controller(options);
+            c.data = Utils.extend(c.data,data);
+            return c;
         }
     }
 }

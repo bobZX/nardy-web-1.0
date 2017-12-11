@@ -40,7 +40,7 @@ var Utils = (function(){
                 this.extend(C.prototype, o);
             }
         },
-        extend:function(destination,source){
+        extend:function(){
             var options, name, src, copy, copyIsArray, clone;
             var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false;
 
@@ -94,6 +94,16 @@ var Utils = (function(){
             }
             // Return the modified object
             return target;
+        },
+        copyPropByNames:function(source,names){
+            var result = {};
+            names.forEach(function(name){
+                if(source.hasOwnProperty(name)){
+                    var prop = source[name];
+                    result[name] = prop;
+                }
+            })
+            return Utils.extend(true,{},result);
         },
         gset:function(data,name,value){
             if (name) {
