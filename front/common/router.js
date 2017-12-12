@@ -34,7 +34,7 @@ var Utils = require('./utils.js');
 		if(!this.$ele)return;
  		if(Utils.isObject(handler)){
 			if(handler.hasOwnProperty('initialize')){
-				this.$ele.innerHTML = handler.initialize(params.query).view;
+				this.$ele.innerHTML = handler.initialize(params.query);
 			}
  		}else if(Utils.isFunction(handler)){
 			this.$ele.innerHTML = handler.call(params.query);

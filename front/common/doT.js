@@ -13,12 +13,15 @@
 			interpolate: /\{\{=([\s\S]+?)\}\}/g,
 			encode:      /\{\{!([\s\S]+?)\}\}/g,
 			use:         /\{\{#([\s\S]+?)\}\}/g,
-			useParams:   /(^|[^\w$])def(?:\.|\[[\'\"])([\w$\.]+)(?:[\'\"]\])?\s*\:\s*([\w$\.]+|\"[^\"]+\"|\'[^\']+\'|\{[^\}]+\})/g,
+			useParams:   /^def(?:\.|\[[\'\"])([\w$\.]+)(?:[\'\"]\])?\s*\:\s*([\w$\.]+|\"[^\"]+\"|\'[^\']+\'|\{[^\}]+\})/g,
 			define:      /\{\{##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\}\}/g,
 			defineParams:/^\s*([\w$]+):([\s\S]+)/,
 			conditional: /\{\{\?(\?)?\s*([\s\S]*?)\s*\}\}/g,
 			iterate:     /\{\{~\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
-			script:		 /^script:([\s\S]+?$)/ig,
+			useScript:		/^script:([\s\S]+?$)/ig,
+			useIterate:		/^iterate:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?$)/ig,
+			useCondition:	/^condition:([\s\S]+?$)/ig,
+			useCondition_r:	/\?(\?)?\s*([\s\S]*?)\:\s*/g,
 			varname:	"it",
 			strip:		true,
 			append:		true,
@@ -55,7 +58,7 @@
 	}, skip = /$^/;
 
 	function resolveDefs(c, block, def) {
-		var r =  ((typeof block === "string") ? block : block.toString())
+		return ((typeof block === "string") ? block : block.toString())
 		.replace(c.define || skip, function(m, code, assign, value) {
 			if (code.indexOf("def.") === 0) {
 				code = code.substring(4);
@@ -82,16 +85,33 @@
 				}
 			});
 			var v;
-			if(c.script.test(code)){
-				var re = new RegExp(c.script);
+			if(c.useScript.test(code)) {
+				var re = new RegExp(c.useScript);
 				var script = re.exec(unescape(code))[1];
 				v = new Function("def", script)(def);
+			}else if(c.useIterate.test(code)) {
+				var re = new RegExp(c.useIterate);
+				var r = re.exec(unescape(code));
+				var script = 'if(!' + r[1] + '.length){return ""};var result="",l=' + r[1] + '.length;for(var i=0;i<l;i++)' +
+					'{var ' + r[2] + '=' + r[1] + '[i],' + r[3] + '=i;result+=' + r[4] + ';};return result;';
+				v = new Function("def", script)(def);
+			}else if(c.useCondition.test(code)){
+				var re = new RegExp(c.useCondition);
+				var str = re.exec(unescape(code))[1];
+				console.log(str);
+				var script = 'var result="'+str.replace(/\'/g,'\"').replace(c.useCondition_r,function(m,elsecase,code){
+						return elsecase?
+						(code ? ';}else if(' + unescape(code) + '){result=' : ';}else{result=') :
+						(code ? '";if(' + unescape(code) + '){result=' : ';');
+					})+';};return result;';
+				v = new Function("def", script)(def);
 			}else{
-				v = new Function("def", "return " + code)(def);
+				var _n = code.substring(13);
+				var script = 'if(def.render){return def.render('+code+',null,"'+_n+'")};return '+ code;
+				v = new Function("def", script)(def);
 			}
 			return v ? resolveDefs(c, v, def) : v;
 		});
-		return r;
 	}
 
 	function unescape(code) {

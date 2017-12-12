@@ -11,14 +11,14 @@ var button_group = Controller.component('button_group',{
           },{
               name:'btn2',
               type:'add'
-          }],
-          somewords:'we will be better'
+          }]
       }
     },
+    props:['somewords'],
     tpl:tpl,
     watch:{
-        somewords:function(v,ov,n){
-            this.rerender(n);
+        somewords:function(v,ov){
+            //this.rerender();
         }
     },
     components:{

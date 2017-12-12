@@ -16,28 +16,37 @@ var cset = window.CSet = (function(){
     }
 })();
 
-var dotRender = (function(){
+var dotRender = function(){
+    var _tid = 0,_target = target;
     return {
-        render:function(tpl,data){
+        render:function(tpl,data,name){
             var r = '';
             if(Utils.isObject(tpl)){
                 var _data;
+                if(!data)data = this;
                 if(tpl._props_.length){
                     _data = Utils.copyPropByNames(data,tpl._props_);
-                }else{
-                    _data = data;
                 }
                 var c = tpl.initialize(_data);
-                if(target)cset[target].children.push(c._id);
+                if(_target){
+                    cset[_target].children.push(c._id);
+                    c.parent = cset[_target]._id;
+                }
                 r = c.view;
             }else{
-                var t = dot.template(tpl);
-                r = t(data);
+                if(data){
+                    var t = dot.template(tpl,null,this);
+                    r = t(data);
+                }else{
+                    r = tpl;
+                }
+                var n = name?name+'_t'+(_tid++):'unknown_t'+(_tid++);
+                r = '<div name="'+n+'">'+ r +'</div>';
             }
             return r;
         }
     }
-})()
+}
 
 var Controller = function (options) {
 
@@ -65,18 +74,25 @@ var Controller = function (options) {
 
     //监听数据模型get、set方法
     this.data = data;
+    if(options._propDatas_){
+        Utils.each(options._propDatas_,function(propData,name){
+            if(this.data.hasOwnProperty(name))
+                this.data[name] = null;
+            this.data[name] = propData;
+        },this)
+    }
     this._observe(this.data);
 
     var tpl,view_name = this._id,html='';
 
-    this.model_tpl = {}//数据模型依赖模板缓存;
-    this.addModelTpl(options.tpl,view_name);
+    //this.model_tpl = {}//数据模型依赖模板缓存;
+    //this.addModelTpl(options.tpl,view_name);
 
     this.components = options.components;
     this.tpl = options.tpl;
     this.children = [];
     target = this._id;
-    var preRender = Utils.extend(dotRender,this.components,this.data);
+    var preRender = Utils.extend(dotRender(),{component:this.components},this.data);
     tpl = dot.template(this.tpl, null, preRender);
     html = tpl(this.data);
     if (options.ele) {
@@ -147,7 +163,6 @@ Controller.prototype._observe = function  (data){
 
 //添加对数据对象的观察（递归使子对象继承父对象观察回调函数）
 Controller.prototype._watch = function(data,name,callback){
-    if(!callback.name)callback.name = name;
     var new_data = (new Watcher(this,data,name,callback)).value;
     if(Utils.isObject(new_data)||Utils.isArray(new_data)){
         Utils.each(new_data,function(value,key){
@@ -156,6 +171,8 @@ Controller.prototype._watch = function(data,name,callback){
     }
 }
 
+/**
+ * 数据模板绑定搁置
 Controller.prototype.addModelTpl = function(tpl,view_name,models){
     if(!models){
         var rs = tpl.toString().match(reg_model);
@@ -177,7 +194,7 @@ Controller.prototype.addModelTpl = function(tpl,view_name,models){
     }else{
         for(var i=0;i<models.length;i++){
             var m = models[i];
-            f(!this.model_tpl.hasOwnProperty(m)){
+            if(!this.model_tpl.hasOwnProperty(m)){
                 this.model_tpl[m] = [];
             }
             this.model_tpl[m].push({
@@ -187,6 +204,7 @@ Controller.prototype.addModelTpl = function(tpl,view_name,models){
         }
     }
 }
+ **/
 
 //销毁
 Controller.prototype.destory = function(){
@@ -197,44 +215,29 @@ Controller.prototype.destory = function(){
     }
     this.data = null;
     this.components = null;
-    this.model_tpl  = null;
+    //this.model_tpl  = null;
     delete cset[this._id];
 }
 
-Controller.prototype.rerender = function(model_name){
-    if(model_name&&this.model_tpl.hasOwnProperty(model_name)){
-        try {
-            var mtpls = this.model_tpl[model_name];
-            for(var k=0;k<mtpls.length;k++){
-                var mtpl = mtpls[k];
-                var tpl = dot.template(mtpl.tpl, null, this.components);
-                var html = tpl(this.data);
-                var $eles = document.getElementsByName(mtpl.name);
-                for (var i = 0; i < $eles.length; i++) {
-                    var $ele = $eles[i];
-                    $ele.innerHTML = html;
-                }
-                //是容器重绘时，容器中子组件不需要重新绘制
-                if(!mtpl.isComponent)
-                    break;
-            }
-        }catch(e){
-            console.error(e.message);
-        }
-    }else{
+Controller.prototype.rerender = function(){
+    try{
         for(var i=0;i<this.children.length;i++){
             cset[this.children[i]].destory();
         }
+        this.children.length = 0;
         target = this._id;
-        var preRender = Utils.extend(dotRender,this.components,this.data);
+        var preRender = Utils.extend(dotRender(),{component:this.components},this.data);
         var tpl = dot.template(this.tpl, null, preRender);
         var html = tpl(this.data);
         this.view = html;
         var $eles = document.getElementsByName(this._id);
         for (var i = 0; i < $eles.length; i++) {
             var $ele = $eles[i];
+            console.log($ele)
             $ele.innerHTML = html;
         }
+    }catch(e){
+        console.error(e.message);
     }
 }
 
@@ -245,7 +248,7 @@ Controller.instance = function(id,options){
             var _id = options._id_ = id+'_'+(cid++);
             _ids.push(_id);
             var c = new Controller(options);
-            c.data = Utils.extend(c.data,data);
+            if(data)c.data = Utils.extend(c.data,data);
             return c.view;
         },
         destroy:function(){
@@ -264,17 +267,12 @@ Controller.component = function(id,options){
     return {
         _props_:_props,
         initialize:function(data){
-            options._id_ = id+'_'+(cid++);
+            options._id_ = id+'_c'+(cid++);
+            options._propDatas_ = data;
             var c = new Controller(options);
-            c.data = Utils.extend(c.data,data);
             return c;
         }
     }
-}
-
-Controller.component = function(id,options){
-    options._id_ = id;
-    return new Controller(options,true);
 }
 
 //数据对象依赖
@@ -309,7 +307,7 @@ Watcher.prototype = {
         var oldVal = this.value;
         if(value!=oldVal){
             this.value = value;
-            this.callback.call(this.vm,value,oldVal,getHeadName(this.callback.name));
+            this.callback.call(this.vm,value,oldVal);
         }
     },
     get:function(){
