@@ -18,10 +18,11 @@
 			defineParams:/^\s*([\w$]+):([\s\S]+)/,
 			conditional: /\{\{\?(\?)?\s*([\s\S]*?)\s*\}\}/g,
 			iterate:     /\{\{~\s*(?:\}\}|([\s\S]+?)\s*\:\s*([\w$]+)\s*(?:\:\s*([\w$]+))?\s*\}\})/g,
-			useScript:		/^script:([\s\S]+?$)/ig,
-			useIterate:		/^iterate:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?$)/ig,
-			useCondition:	/^condition:([\s\S]+?$)/ig,
-			useCondition_r:	/\?(\?)?\s*([\s\S]*?)\:\s*/g,
+			useScript:		/^script:([\s\S]+?$)/i,
+			useIterate:		/^iterate:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?$)/i,
+			useCondition:	/^condition:([\s\S]+?$)/i,
+			useCondition_r:	/\?(\?)?\s*([\s\S]*?)\:\s*/i,
+			useComponent:	/^component:([\s\S]+?)(?:\:([\s\S]+?))?(?:\:([\s\S]+?))?$/i,
 			varname:	"it",
 			strip:		true,
 			append:		true,
@@ -95,19 +96,22 @@
 				var script = 'if(!' + r[1] + '.length){return ""};var result="",l=' + r[1] + '.length;for(var i=0;i<l;i++)' +
 					'{var ' + r[2] + '=' + r[1] + '[i],' + r[3] + '=i;result+=' + r[4] + ';};return result;';
 				v = new Function("def", script)(def);
-			}else if(c.useCondition.test(code)){
+			}else if(c.useCondition.test(code)) {
 				var re = new RegExp(c.useCondition);
 				var str = re.exec(unescape(code))[1];
-				console.log(str);
-				var script = 'var result="'+str.replace(/\'/g,'\"').replace(c.useCondition_r,function(m,elsecase,code){
-						return elsecase?
-						(code ? ';}else if(' + unescape(code) + '){result=' : ';}else{result=') :
-						(code ? '";if(' + unescape(code) + '){result=' : ';');
-					})+';};return result;';
+				var script = 'var result="' + str.replace(/\'/g, '\"').replace(c.useCondition_r, function (m, elsecase, code) {
+						return elsecase ?
+							(code ? ';}else if(' + unescape(code) + '){result=' : ';}else{result=') :
+							(code ? '";if(' + unescape(code) + '){result=' : ';');
+					}) + ';};return result;';
+				v = new Function("def", script)(def);
+			}else if(c.useComponent.test(code)){
+				var re = new RegExp(c.useComponent);
+				var r = re.exec(unescape(code));
+				var script = 'if(def.render){return def.render(def.component["'+r[1]+'"],"'+r[2]+'",'+r[3]+');};return ""';
 				v = new Function("def", script)(def);
 			}else{
-				var _n = code.substring(13);
-				var script = 'if(def.render){return def.render('+code+',null,"'+_n+'")};return '+ code;
+				var script = 'return '+ code;
 				v = new Function("def", script)(def);
 			}
 			return v ? resolveDefs(c, v, def) : v;

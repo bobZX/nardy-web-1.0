@@ -13,7 +13,20 @@ var Home = Controller.instance('home',{
             },
             text:'我是文本框',
             cpn:['button_group','button_group'],
-            somewords:'we will be better'
+            btng: {
+
+                btns: [{
+                    name: 'bnt4',
+                    type: 'delete'
+                }, {
+                    name: 'btn3',
+                    type: 'add'
+                }]
+            },
+            btng2: {
+
+            },
+            somewords: 'we will be better',
         }
     },
     tpl:tpl,
@@ -34,6 +47,10 @@ var Home = Controller.instance('home',{
     methods:{
         callSay:function(e){
 
+        },
+        sayWords:function(e){
+            e = window.event || e;
+            alert('hi everyone');
         }
     }
 })

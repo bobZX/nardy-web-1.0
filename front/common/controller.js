@@ -19,31 +19,35 @@ var cset = window.CSet = (function(){
 var dotRender = function(){
     var _tid = 0,_target = target;
     return {
-        render:function(tpl,data,name){
-            var r = '';
-            if(Utils.isObject(tpl)){
-                var _data;
-                if(!data)data = this;
-                if(tpl._props_.length){
-                    _data = Utils.copyPropByNames(data,tpl._props_);
-                }
-                var c = tpl.initialize(_data);
-                if(_target){
-                    cset[_target].children.push(c._id);
-                    c.parent = cset[_target]._id;
-                }
-                r = c.view;
-            }else{
-                if(data){
-                    var t = dot.template(tpl,null,this);
-                    r = t(data);
+        render:function(tpl,id,data){
+            try{
+                var r = '';
+                if(Utils.isObject(tpl)){
+                    var _data;
+                    if(data == undefined||!data)data = this;
+                    if(tpl._props_.length){
+                        _data = Utils.copyPropByNames(data,tpl._props_);
+                    }
+                    var c = tpl.initialize(_data,id);
+                    if(_target){
+                        cset[_target].children.push(c._id);
+                        c.parent = cset[_target]._id;
+                    }
+                    r = c.view;
                 }else{
-                    r = tpl;
+                    if(data){
+                        var t = dot.template(tpl,null,this);
+                        r = t(Utils.extend({},data,this.events));
+                    }else{
+                        r = tpl;
+                    }
+                    var n = (!id||id == 'undefined')?'nd_t'+(_tid++):id;
+                    r = '<div name="'+n+'">'+ r +'</div>';
                 }
-                var n = name?name+'_t'+(_tid++):'unknown_t'+(_tid++);
-                r = '<div name="'+n+'">'+ r +'</div>';
+                return r;
+            }catch(e){
+                console.error('#dotRender error#'+e.message);
             }
-            return r;
         }
     }
 }
@@ -62,23 +66,30 @@ var Controller = function (options) {
         console.error('data props is not a function');
         return;
     }
-    var data = options.data.call(this);
+    var data = options.data.call(this),evts = {};
     this._id = options.ele || options._id_;
+    this.name = options.name;
     if(options.methods){
         var scope = cset.addController(this,this._id);
         Utils.each(options.methods, function (callback,func) {
             this[func] = callback;
-            data[func] = scope+'.'+ func +'(event)';
+            evts[func] = scope+'.'+ func +'(event)';
         },this);
     }
 
     //监听数据模型get、set方法
     this.data = data;
-    if(options._propDatas_){
-        Utils.each(options._propDatas_,function(propData,name){
-            if(this.data.hasOwnProperty(name))
-                this.data[name] = null;
-            this.data[name] = propData;
+    this.events = evts;
+    if(options.props){
+        Utils.each(options.props,function(prop){
+            if(options._propDatas_&&options._propDatas_.hasOwnProperty(prop)) {
+                if (this.data.hasOwnProperty(prop))
+                    this.data[prop] = null;
+                //TODO propData为引用类型的影响
+                this.data[prop] = options._propDatas_[prop];
+            }else{
+                this.data[prop] = null;
+            }
         },this)
     }
     this._observe(this.data);
@@ -92,9 +103,9 @@ var Controller = function (options) {
     this.tpl = options.tpl;
     this.children = [];
     target = this._id;
-    var preRender = Utils.extend(dotRender(),{component:this.components},this.data);
+    var preRender = Utils.extend(dotRender(),{component:this.components,events:this.events},this.data);
     tpl = dot.template(this.tpl, null, preRender);
-    html = tpl(this.data);
+    html = tpl(Utils.extend({},this.data,this.events));
     if (options.ele) {
         var $ele = document.getElementById(options.ele);
         $ele.setAttribute('name', options.ele);
@@ -206,7 +217,7 @@ Controller.prototype.addModelTpl = function(tpl,view_name,models){
 }
  **/
 
-//销毁
+//销毁Controller实例
 Controller.prototype.destory = function(){
     if(this.children.length){
         Utils.each(this.children,function(child){
@@ -226,9 +237,9 @@ Controller.prototype.rerender = function(){
         }
         this.children.length = 0;
         target = this._id;
-        var preRender = Utils.extend(dotRender(),{component:this.components},this.data);
+        var preRender = Utils.extend(dotRender(),{component:this.components,events:this.events},this.data);
         var tpl = dot.template(this.tpl, null, preRender);
-        var html = tpl(this.data);
+        var html = tpl(Utils.extend({},this.data,this.events));
         this.view = html;
         var $eles = document.getElementsByName(this._id);
         for (var i = 0; i < $eles.length; i++) {
@@ -241,12 +252,18 @@ Controller.prototype.rerender = function(){
     }
 }
 
-Controller.instance = function(id,options){
+Controller.instance = function(name,options){
     var _ids = [];
     return {
-        initialize:function(data){
-            var _id = options._id_ = id+'_'+(cid++);
+        initialize:function(data,id){
+            var _id;
+            if(!id||id=='undefined'){
+                _id = options._id_ = 'nd_'+(cid++);
+            }else{
+                _id = options._id_ = id;
+            }
             _ids.push(_id);
+            options.name = name;
             var c = new Controller(options);
             if(data)c.data = Utils.extend(c.data,data);
             return c.view;
@@ -259,16 +276,21 @@ Controller.instance = function(id,options){
     }
 }
 
-Controller.component = function(id,options){
+Controller.component = function(name,options){
     var _props = [];
     if(options.props){
         _props = Array.prototype.slice.call(options.props);
     }
     return {
         _props_:_props,
-        initialize:function(data){
-            options._id_ = id+'_c'+(cid++);
+        initialize:function(data,id){
+            if(!id||id == 'undefined'){
+                options._id_ = 'nd_c'+(cid++);
+            }else{
+                options._id_ = id;
+            }
             options._propDatas_ = data;
+            options.name = name;
             var c = new Controller(options);
             return c;
         }
@@ -316,15 +338,6 @@ Watcher.prototype = {
         Depend.watcher = null;
         return value;
     }
-}
-
-//获取对象名称头部
-function getHeadName(name){
-    var i = name.indexOf('.')
-    if(i>-1){
-        name = name.substring(0,i);
-    }
-    return name;
 }
 
 //获取子模板对象的属性集合

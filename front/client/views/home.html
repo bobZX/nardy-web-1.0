@@ -2,20 +2,7 @@
 <h2>{{=it.type}}</h2>
 <button onclick="{{=it.callSay}}">callSay</button>
 
-{{#script:
-var r = '';
-for(var i=0;i<def.cpn.length;i++){
-    r+=def.render(def.component[def.cpn[i]])
-}
-return r;
-}}
-
-{{#condition:
-?def.a ==1:
-"<div>1</div>"+def.render(def.component["button_group"])
-??def.a ==2:
-"<div>2</div>"
-??:
-'<div>3</div>'
+{{#iterate:def.cpn:v:index:
+    def.render(def.component[v])
 }}
 

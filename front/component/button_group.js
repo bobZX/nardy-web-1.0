@@ -30,11 +30,7 @@ var button_group = Controller.component('button_group',{
             this.sayHello();
         },
         sayHello:function(){
-            console.log('set btns');
-            var btns = this.get('btns');
-            btns.forEach(function(o,i){
-                o.name = 'newbtn'+i;
-            })
+            alert('hi everyone');
         }
     }
 })
