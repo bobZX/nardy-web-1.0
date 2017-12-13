@@ -124,6 +124,10 @@ var Controller = function (options) {
     if(options.router){
         options.router.$ele = document.getElementsByTagName('router-view')[0];
     }
+
+    if(options.mounted){
+        options.mounted.call(this);
+    }
 }
 
 Controller.prototype.get = function(name){
