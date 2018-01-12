@@ -2,6 +2,7 @@ var Utils = require('./utils')
 var dot = require('./doT');
 
 var reg_model = /\{\{\s*[!~?=]+?it.([\w$]+)[^\}\s]*\}\}/g;
+var reg_dot= '<dot [^>]*id=[\'|\"]@id[\'|\"][^>]*>(<dot[^>]*>(<dot[^>]*>(<dot[^>]*>.*?</dot>|.)*?</dot>|.)*?</dot>|.)*?</dot>';
 var cid = 0,target;
 
 //控制对象集合，全局可见，用于视图事件回调
@@ -77,7 +78,6 @@ var Controller = function (options) {
         },this);
     }
 
-    //监听数据模型get、set方法
     this.data = data;
     this.events = evts;
     if(options.props){
@@ -92,6 +92,7 @@ var Controller = function (options) {
             }
         },this)
     }
+    //监听数据模型get、set方法
     this._observe(this.data);
 
     var tpl,view_name = this._id,html='';
@@ -225,7 +226,7 @@ Controller.prototype.addModelTpl = function(tpl,view_name,models){
 Controller.prototype.destory = function(){
     if(this.children.length){
         Utils.each(this.children,function(child){
-            cset[child].destroy();
+            cset[child].destory.call(cset[child]);
         })
     }
     this.data = null;
@@ -234,7 +235,8 @@ Controller.prototype.destory = function(){
     delete cset[this._id];
 }
 
-Controller.prototype.rerender = function(){
+//TODO:指定容器和模版的重新渲染
+Controller.prototype.rerender = function(id){
     try{
         for(var i=0;i<this.children.length;i++){
             cset[this.children[i]].destory();
@@ -242,14 +244,28 @@ Controller.prototype.rerender = function(){
         this.children.length = 0;
         target = this._id;
         var preRender = Utils.extend(dotRender(),{component:this.components,events:this.events},this.data);
-        var tpl = dot.template(this.tpl, null, preRender);
+        var _tpl = '';
+        if(id){
+            var _str = reg_dot.replace('@id',id);
+            var _reg = new RegExp(_str,"i");
+            var r = _reg.exec(this.tpl.toString().replace(/[\r\t\n]/g, " ").replace(/\"/g,"\'"));
+            if(r[0])_tpl = r[0];
+        }else{
+            _tpl = this.tpl;
+        }
+        var tpl = dot.template(_tpl, null, preRender);
         var html = tpl(Utils.extend({},this.data,this.events));
-        this.view = html;
-        var $eles = document.getElementsByName(this._id);
-        for (var i = 0; i < $eles.length; i++) {
-            var $ele = $eles[i];
-            console.log($ele)
-            $ele.innerHTML = html;
+        if(id){
+            var $ele = document.getElementById(id);
+            $ele.outerHTML = html;
+        }else{
+            this.view = html;
+            var $eles = document.getElementsByName(this._id);
+            for (var i = 0; i < $eles.length; i++) {
+                var $ele = $eles[i];
+                console.log($ele)
+                $ele.innerHTML = html;
+            }
         }
     }catch(e){
         console.error(e.message);

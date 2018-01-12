@@ -1,8 +1,10 @@
 <h1>Home Page</h1>
-<h2>{{=it.type}}</h2>
+
 <button onclick="{{=it.callSay}}">callSay</button>
 
-{{#iterate:def.cpn:v:index:
-    def.render(def.component[v])
-}}
-
+<dot id="footer">
+    {{#iterate:def.cpn:v:index:
+        def.render(def.component[v])
+    }}
+    <h2>{{=it.type}}</h2>
+</dot>

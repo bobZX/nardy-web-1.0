@@ -59,7 +59,7 @@
 	}, skip = /$^/;
 
 	function resolveDefs(c, block, def) {
-		return ((typeof block === "string") ? block : block.toString())
+		return ((typeof block === "string") ? block : block.toString()).replace("<dot","<div").replace("</dot>","</div>")
 		.replace(c.define || skip, function(m, code, assign, value) {
 			if (code.indexOf("def.") === 0) {
 				code = code.substring(4);

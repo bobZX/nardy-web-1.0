@@ -1,3 +1,12 @@
+/**
+ * 说明：数据模型基类
+ * 用途：
+ * 1、数据校验
+ * 2、别名转换
+ * 3、持久化数据/缓存
+ * 4、动态配置，请求地址url、请求方式http/websocket/object等
+ * 5、数据映射、数据预处理
+ */
 var Utils = require('./utils');
 var axios = require(axios);
 

@@ -38,7 +38,7 @@ var Home = Controller.instance('home',{
     },
     watch:{
         'type':function(value,oldVal){
-            console.log('type watch');
+            this.rerender("footer");
         },
         'user':function(v,ov){
             console.log('user watch');
@@ -46,7 +46,7 @@ var Home = Controller.instance('home',{
     },
     methods:{
         callSay:function(e){
-
+            this.set("type","type");
         },
         sayWords:function(e){
             e = window.event || e;

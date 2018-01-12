@@ -6,7 +6,8 @@ module.exports = {
     devtool: "#source-map",
     entry: {
         amain:'./front/admin/main.js',
-		cmain:'./front/client/main.js'
+		cmain:'./front/client/main.js',
+        testT:'./front/test/testT.js'
 	},
     output: {
         path: path.join(__dirname, "./front/dist/"),
