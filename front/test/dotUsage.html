@@ -1,0 +1,50 @@
+<!--
+如下dot扩展语法，用于模版预编译，主要适用于子模版、动态模版等场景
+-->
+
+<!--
+components:模版名称:id:传递数据
+-->
+{{#components:text#}}
+{{#components:text:abc:{content:'abc'}#}}
+
+<!--
+iterate:集合:值:索引:返回值
+def.render(模版,id,传递数据)：内置渲染函数，def.components：实例中定义的组件集合
+-->
+{{#iterate:def.arr:value:index:
+'<div><span>值：'+value+'</span><span>&nbsp索引：'+index+'</span></div>'
+#}}
+
+{{#iterate:def.arr:value:index:
+def.render(def.components['text'])
+#}}
+
+{{#iterate:def.arr:value:index:
+def.render(def.components['text'],null,{content:value})
+#}}
+
+<!--
+condition:?条件1:返回值??条件2:返回值??:返回值
+-->
+{{#condition:
+?def.count == 0:
+    '<div>count == 0</div>'
+??def.count == 1:
+    '<div>count == 1</div>'
+??:
+    '<div>count == 2</div>'
+#}}
+
+<!--
+script:脚本,return出返回值
+-->
+{{#script:
+
+if(def.show){
+return '<h1>我是测试标题</h1>'
+}else{
+return ''
+}
+
+#}}

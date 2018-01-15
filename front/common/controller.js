@@ -1,11 +1,14 @@
 var Utils = require('./utils')
 var dot = require('./doT');
 
-var reg_model = /\{\{\s*[!~?=]+?it.([\w$]+)[^\}\s]*\}\}/g;
+//dot标签用于dotT预编译，后被编译为div标签。适用场景是通过dot标签id，指定重新渲染的对象。dot嵌套只支持3级。
 var reg_dot= '<dot [^>]*id=[\'|\"]@id[\'|\"][^>]*>(<dot[^>]*>(<dot[^>]*>(<dot[^>]*>.*?</dot>|.)*?</dot>|.)*?</dot>|.)*?</dot>';
 var cid = 0,target;
 
-//控制对象集合，全局可见，用于视图事件回调
+/**
+ * 控制对象集合，全局可见，用于视图事件回调
+ * @type {{addController}}
+ */
 var cset = window.CSet = (function(){
     return {
         addController:function(cObj,id){
@@ -17,6 +20,10 @@ var cset = window.CSet = (function(){
     }
 })();
 
+/**
+ * 模版预编译期渲染函数，用于编译子模版
+ * @returns {{render: render}}
+ */
 var dotRender = function(){
     var _tid = 0,_target = target;
     return {
@@ -87,24 +94,18 @@ var Controller = function (options) {
                     this.data[prop] = null;
                 //TODO propData为引用类型的影响
                 this.data[prop] = options._propDatas_[prop];
-            }else{
-                this.data[prop] = null;
             }
         },this)
     }
-    //监听数据模型get、set方法
     this._observe(this.data);
 
     var tpl,view_name = this._id,html='';
-
-    //this.model_tpl = {}//数据模型依赖模板缓存;
-    //this.addModelTpl(options.tpl,view_name);
 
     this.components = options.components;
     this.tpl = options.tpl;
     this.children = [];
     target = this._id;
-    var preRender = Utils.extend(dotRender(),{component:this.components,events:this.events},this.data);
+    var preRender = Utils.extend(dotRender(),{components:this.components,events:this.events},this.data);
     tpl = dot.template(this.tpl, null, preRender);
     html = tpl(Utils.extend({},this.data,this.events));
     if (options.ele) {
@@ -149,7 +150,11 @@ Controller.prototype.set = function(name,value){
     }
 }
 
-//监听数据get、set方法
+/**
+ * 监听数据get、set方法
+ * @param data
+ * @private
+ */
 Controller.prototype._observe = function  (data){
     //TODO 初始data数据筛选，未watch对象不监听
     if(Utils.isObject(data) || Utils.isArray(data)){
@@ -177,7 +182,13 @@ Controller.prototype._observe = function  (data){
     }
 }
 
-//添加对数据对象的观察（递归使子对象继承父对象观察回调函数）
+/**
+ * 添加对数据对象的观察（递归使子对象继承父对象观察回调函数）
+ * @param data
+ * @param name
+ * @param callback
+ * @private
+ */
 Controller.prototype._watch = function(data,name,callback){
     var new_data = (new Watcher(this,data,name,callback)).value;
     if(Utils.isObject(new_data)||Utils.isArray(new_data)){
@@ -188,41 +199,8 @@ Controller.prototype._watch = function(data,name,callback){
 }
 
 /**
- * 数据模板绑定搁置
-Controller.prototype.addModelTpl = function(tpl,view_name,models){
-    if(!models){
-        var rs = tpl.toString().match(reg_model);
-        if(rs&&rs.length){
-            for(var i=0;i<rs.length;i++){
-                var reg = new RegExp(reg_model);
-                reg.exec(rs[i]);
-                var m = RegExp.$1;
-                if(!this.model_tpl.hasOwnProperty(m)){
-                    this.model_tpl[m] = [];
-                }
-                this.model_tpl[m].push({
-                    tpl:tpl,
-                    name:view_name,
-                    isComponent:false
-                })
-            }
-        }
-    }else{
-        for(var i=0;i<models.length;i++){
-            var m = models[i];
-            if(!this.model_tpl.hasOwnProperty(m)){
-                this.model_tpl[m] = [];
-            }
-            this.model_tpl[m].push({
-                name:view_name,
-                isComponent:true
-            })
-        }
-    }
-}
- **/
-
-//销毁Controller实例
+ * 销毁实例
+ */
 Controller.prototype.destory = function(){
     if(this.children.length){
         Utils.each(this.children,function(child){
@@ -231,11 +209,13 @@ Controller.prototype.destory = function(){
     }
     this.data = null;
     this.components = null;
-    //this.model_tpl  = null;
     delete cset[this._id];
 }
 
-//TODO:指定容器和模版的重新渲染
+/**
+ * 重新渲染整个模版，或根据id渲染指定的dot标签
+ * @param id，dot标签id
+ */
 Controller.prototype.rerender = function(id){
     try{
         for(var i=0;i<this.children.length;i++){
@@ -243,7 +223,7 @@ Controller.prototype.rerender = function(id){
         }
         this.children.length = 0;
         target = this._id;
-        var preRender = Utils.extend(dotRender(),{component:this.components,events:this.events},this.data);
+        var preRender = Utils.extend(dotRender(),{components:this.components,events:this.events},this.data);
         var _tpl = '';
         if(id){
             var _str = reg_dot.replace('@id',id);
@@ -272,6 +252,12 @@ Controller.prototype.rerender = function(id){
     }
 }
 
+/**
+ * 页面实例
+ * @param name
+ * @param options
+ * @returns {{initialize: initialize, destroy: destroy}}
+ */
 Controller.instance = function(name,options){
     var _ids = [];
     return {
@@ -296,6 +282,12 @@ Controller.instance = function(name,options){
     }
 }
 
+/**
+ * 组件实例
+ * @param name
+ * @param options
+ * @returns {{_props_: Array, initialize: initialize}}
+ */
 Controller.component = function(name,options){
     var _props = [];
     if(options.props){
@@ -317,7 +309,10 @@ Controller.component = function(name,options){
     }
 }
 
-//数据对象依赖
+/**
+ * 数据对象依赖
+ * @constructor
+ */
 function Depend (){
     this.watchers = [];
 }
@@ -331,7 +326,14 @@ Depend.prototype = {
         })
     }
 }
-//观察者
+/**
+ * 观察者
+ * @param scope
+ * @param data
+ * @param name
+ * @param callback
+ * @constructor
+ */
 function Watcher(scope,data,name,callback){
     this.vm = scope;
     this.data = data;
@@ -360,7 +362,13 @@ Watcher.prototype = {
     }
 }
 
-//获取子模板对象的属性集合
+/**
+ * 获取子模板对象的属性集合（弃用）
+ * @param children
+ * @param prop
+ * @param result
+ * @returns {*}
+ */
 function getChildProp(children,prop,result){
     if(result&&Utils.isObject(children)){
         Utils.each(children,function(child,name){

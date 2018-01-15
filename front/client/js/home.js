@@ -33,9 +33,6 @@ var Home = Controller.instance('home',{
     components:{
         'button_group':button_group
     },
-    compile:{
-        show:false
-    },
     watch:{
         'type':function(value,oldVal){
             this.rerender("footer");

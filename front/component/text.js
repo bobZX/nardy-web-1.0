@@ -7,6 +7,7 @@ var text = Controller.component('text',{
             content:'我是文本框'
         }
     },
+    props:['content'],
     tpl:tpl,
     methods:{
         showContent:function(e){

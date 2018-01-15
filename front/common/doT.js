@@ -2,6 +2,10 @@
 // 2011-2014, Laura Doktorova, https://github.com/olado/doT
 // Licensed under the MIT license.
 
+//纳迪-赵相博修改于2018/1/15
+//扩展预编译语法，增加{{#script:}},{{#iterate:}},{{#condition:}},{{#components:}}
+//扩展用法，见dotUsage.html
+
 (function () {
 	"use strict";
 
@@ -12,7 +16,7 @@
 			evaluate:    /\{\{([\s\S]+?(\}?)+)\}\}/g,
 			interpolate: /\{\{=([\s\S]+?)\}\}/g,
 			encode:      /\{\{!([\s\S]+?)\}\}/g,
-			use:         /\{\{#([\s\S]+?)\}\}/g,
+			use:         /\{\{#([\s\S]+?)#\}\}/g,
 			useParams:   /^def(?:\.|\[[\'\"])([\w$\.]+)(?:[\'\"]\])?\s*\:\s*([\w$\.]+|\"[^\"]+\"|\'[^\']+\'|\{[^\}]+\})/g,
 			define:      /\{\{##\s*([\w\.$]+)\s*(\:|=)([\s\S]+?)#\}\}/g,
 			defineParams:/^\s*([\w$]+):([\s\S]+)/,
@@ -21,8 +25,8 @@
 			useScript:		/^script:([\s\S]+?$)/i,
 			useIterate:		/^iterate:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?)\:([\s\S]+?$)/i,
 			useCondition:	/^condition:([\s\S]+?$)/i,
-			useCondition_r:	/\?(\?)?\s*([\s\S]*?)\:\s*/i,
-			useComponent:	/^component:([\s\S]+?)(?:\:([\s\S]+?))?(?:\:([\s\S]+?))?$/i,
+			useCondition_r:	/\?(\?)?\s*([\s\S]*?)\:\s*/g,
+			useComponent:	/^components:([\s\S]+?)(?:\:([\s\S]+?))?(?:\:([\s\S]+?))?$/i,
 			varname:	"it",
 			strip:		true,
 			append:		true,
@@ -77,14 +81,14 @@
 			return "";
 		})
 		.replace(c.use || skip, function(m, code) {
-			if (c.useParams) code = code.replace(c.useParams, function(m, s, d, param) {
-				if (def[d] && def[d].arg && param) {
-					var rw = (d+":"+param).replace(/'|\\/g, "_");
-					def.__exp = def.__exp || {};
-					def.__exp[rw] = def[d].text.replace(new RegExp("(^|[^\\w$])" + def[d].arg + "([^\\w$])", "g"), "$1" + param + "$2");
-					return s + "def.__exp['"+rw+"']";
-				}
-			});
+			// if (c.useParams) code = code.replace(c.useParams, function(m, s, d, param) {
+			// 	if (def[d] && def[d].arg && param) {
+			// 		var rw = (d+":"+param).replace(/'|\\/g, "_");
+			// 		def.__exp = def.__exp || {};
+			// 		def.__exp[rw] = def[d].text.replace(new RegExp("(^|[^\\w$])" + def[d].arg + "([^\\w$])", "g"), "$1" + param + "$2");
+			// 		return s + "def.__exp['"+rw+"']";
+			// 	}
+			// });
 			var v;
 			if(c.useScript.test(code)) {
 				var re = new RegExp(c.useScript);
@@ -108,7 +112,7 @@
 			}else if(c.useComponent.test(code)){
 				var re = new RegExp(c.useComponent);
 				var r = re.exec(unescape(code));
-				var script = 'if(def.render){return def.render(def.component["'+r[1]+'"],"'+r[2]+'",'+r[3]+');};return ""';
+				var script = 'if(def.render){return def.render(def.components["'+r[1]+'"],"'+r[2]+'",'+r[3]+');};return ""';
 				v = new Function("def", script)(def);
 			}else{
 				var script = 'return '+ code;
