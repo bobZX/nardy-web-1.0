@@ -81,14 +81,14 @@
 			return "";
 		})
 		.replace(c.use || skip, function(m, code) {
-			// if (c.useParams) code = code.replace(c.useParams, function(m, s, d, param) {
-			// 	if (def[d] && def[d].arg && param) {
-			// 		var rw = (d+":"+param).replace(/'|\\/g, "_");
-			// 		def.__exp = def.__exp || {};
-			// 		def.__exp[rw] = def[d].text.replace(new RegExp("(^|[^\\w$])" + def[d].arg + "([^\\w$])", "g"), "$1" + param + "$2");
-			// 		return s + "def.__exp['"+rw+"']";
-			// 	}
-			// });
+			if (c.useParams) code = code.replace(c.useParams, function(m, s, d, param) {
+				if (def[d] && def[d].arg && param) {
+					var rw = (d+":"+param).replace(/'|\\/g, "_");
+					def.__exp = def.__exp || {};
+					def.__exp[rw] = def[d].text.replace(new RegExp("(^|[^\\w$])" + def[d].arg + "([^\\w$])", "g"), "$1" + param + "$2");
+					return s + "def.__exp['"+rw+"']";
+				}
+			});
 			var v;
 			if(c.useScript.test(code)) {
 				var re = new RegExp(c.useScript);

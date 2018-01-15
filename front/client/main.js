@@ -9,7 +9,6 @@ var app = new Controller({
     ele:'container',
     data:function(){
         return {
-            title:'主页'
         }
     },
     router:router
