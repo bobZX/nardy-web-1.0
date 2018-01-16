@@ -5,8 +5,8 @@ module.exports = {
     cache: true,
     devtool: "#source-map",
     entry: {
-        amain:'./front/admin/main.js',
-		cmain:'./front/client/main.js',
+		main:'./front/client/main.js',
+        sign:'./front/client/sign.js',
         testT:'./front/test/testT.js'
 	},
     output: {

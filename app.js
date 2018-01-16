@@ -26,14 +26,11 @@ app.use('/static',express.static(path.join(__dirname, 'front/dist')));
 app.use('/uploads',express.static(path.join(__dirname, 'server/uploads')));
 
 app.get('/', function(req,res,next){
-    if(Utils.isMobileClient(req)){
-      res.render('./mclient/index');
-    }else{
-      res.render('./client/index');
-    }
+    res.render('./client/index');
 });
-app.get('/admin', function(req,res,next){
-    res.render('./admin/index');
+
+app.get('/sign', function(req,res,next){
+    res.render('./client/sign');
 });
 
 // catch 404 and forward to error handler

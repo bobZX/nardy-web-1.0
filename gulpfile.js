@@ -32,7 +32,7 @@ gulp.task('copy:libs', function (done) {
 });
 
 gulp.task('css',function(callback){
-	gulp.src(['.front/asset/css/*.css'])
+	gulp.src(['./front/asset/css/*.css'])
         .pipe(concat('style.min.css'))
         .pipe(cssmin())
         .pipe(gulp.dest('./front/dist/'))
@@ -40,11 +40,11 @@ gulp.task('css',function(callback){
 });
 
 gulp.task('less', function (callback) {
-    gulp.src(['.front/asset/css/*.less'])
+    gulp.src(['./front/asset/css/*.less'])
         .pipe(less())
         .pipe(concat('less.min.css'))
         .pipe(cssmin())
-        .pipe(gulp.dest('.front/dist/'))
+        .pipe(gulp.dest('./front/dist/'))
         .on('end', callback);
 });
 
