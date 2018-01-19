@@ -19,7 +19,8 @@ module.exports = {
         loaders: [
             //{ test: /\.js$/, loader: 'babel-loader' ,exclude: /node_modules/},
             //{ test: /\.css$/, loader: 'style-loader!css-loader'},
-            { test: /\.(html|tpl)$/, loader: 'html-loader' }
+            { test: /\.(html|tpl)$/, loader: 'html-loader' },
+            { test: /\.(png|jpg)$/, loader: "url-loader" }
         ]
     },
     resolve: {

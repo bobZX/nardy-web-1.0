@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>后台</title>
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./static/style.min.css">
+    <link rel="stylesheet" href="./static/less.min.css">
+    <script src="//cdn.bootcss.com/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div id="container" class="m-wrapper">
+    <div class="m-header">
+        <div class="m-h-logo">
+            <img src="./static/images/logo2.png" width="70px" height="70px">
+        </div>
+        <div class="m-h-user">
+            {{#components:ucenter#}}
+        </div>
+    </div>
+    <div class="m-side-l">
+        {{#components:menu#}}
+    </div>
+    <div class="m-content">
+        <div class="m-c-view">
+            <router-view></router-view>
+        </div>
+    </div>
+</div>
+<script>
+    $(window).resize(function(){
+        var h = $(window).height() - 70;
+        $('.m-side-l').css('height',h);
+        $('.m-content').css('height',h);
+    })
+    $(window).resize();
+</script>
+<script src='./static/common.js'></script>
+<script src='./static/main.js'></script>
+</body>
+</html>

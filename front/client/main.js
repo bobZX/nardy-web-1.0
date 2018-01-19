@@ -1,9 +1,11 @@
 var Controller = require('../common/controller');
 var Router = require('../common/router');
-var Home = require('./js/home');
+var menu = require('../component/menu');
+var ucenter = require('../component/ucenter');
+var app = require('./js/app');
 
 var router = new Router();
-router.route('home',Home);
+router.route('app',app);
 router.initialize();
 var app = new Controller({
     ele:'container',
@@ -11,5 +13,9 @@ var app = new Controller({
         return {
         }
     },
-    router:router
-})
+    router:router,
+    components:{
+        menu:menu,
+        ucenter:ucenter
+    }
+});

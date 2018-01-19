@@ -20,7 +20,7 @@ gulp.task('build', function (callback) {
 });
 //将图片拷贝到目标目录
 gulp.task('copy:images', function (done) {
-    gulp.src(['./front/images/*']).pipe(gulp.dest('./front/dist/images')).on('end', done);
+    gulp.src(['./front/asset/images/*']).pipe(gulp.dest('./front/dist/images')).on('end', done);
 });
 //将字体图标拷贝到目标目录
 gulp.task('copy:fonts', function (done) {

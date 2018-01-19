@@ -77,8 +77,8 @@ var Controller = function (options) {
     var data = options.data.call(this),evts = {};
     this._id = options.ele || options._id_;
     this.name = options.name;
+    var scope = cset.addController(this,this._id);
     if(options.methods){
-        var scope = cset.addController(this,this._id);
         Utils.each(options.methods, function (callback,func) {
             this[func] = callback;
             evts[func] = scope+'.'+ func +'(event)';

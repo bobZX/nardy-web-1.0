@@ -1,0 +1,133 @@
+/*主界面*/
+.m-wrapper{
+    position: relative;
+    padding-top: 70px;
+    overflow-y: hidden;
+}
+.m-header{
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1024;
+    width: 100%;
+    height: 70px;
+    background-color: #fff;
+}
+.m-h-logo,.m-h-user{
+    display: inline-block;
+}
+.m-h-logo{
+    width: 126px;
+    height: 100%;
+    background-color: #547a9a;
+    text-align: center;
+}
+.m-h-user{
+    width: 100px;
+    height: 70px;
+    line-height: 70px;
+    float: right;
+    text-align: center;
+}
+.m-side-l{
+    float: left;
+    width: 126px;
+    height: auto;
+    background-color: #547a9a;
+}
+.m-content{
+    overflow-y: auto;
+    margin-left: 126px;
+    padding: 15px;
+}
+.m-c-view{
+    width: 100%;
+    height: auto;
+    padding: 10px 20px;
+    background-color: #fff;
+    border-radius: 4px;
+}
+/*组件-菜单*/
+.c-mu-list>a>span,.c-mu-list>span{
+    display: inline-block;
+    padding: 15px 35px 15px 5px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+}
+.c-mu-list i{
+    margin-left: 15px;
+}
+.c-mu-list li span{
+    display: block;
+    padding: 10px 30px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    text-align: right;
+}
+.c-mu-list.active,.c-mu-list li.active{
+    background-color: #99b5cd;
+}
+/*页面-应用*/
+.a-view{
+    padding: 0 10px 30px 10px;
+}
+.a-view:after{
+    display: table;
+    content:'';
+    clear: both;
+}
+.a-header{
+    position: relative;
+    width: auto;
+    height: 40px;
+    line-height: 40px;
+    margin-bottom: 8px;
+}
+.a-header span{
+    color: #7459ed;
+}
+.a-header button{
+    position: absolute;
+    right: 0;
+    top: 5px;
+    background-color: #7459ed;
+    color: #fff;
+}
+.a-item{
+    position: relative;
+    display: inline-block;
+    float: left;
+    width: 200px;
+    height: 140px;
+    margin: 0 20px 20px 0;
+    border: 1px solid #ccc;
+    border-top: 3px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 20px;
+}
+.a-i-title{
+    padding:8px 0;
+    font-weight: 600;
+}
+.a-item dt,.a-item dd{
+    display: inline-block;
+    font-size: 12px;
+    color: #aaa;
+}
+.a-i-edit{
+    position: absolute;
+    bottom: 10px;
+    color: #7459ed;
+    cursor: pointer;
+}
+/*组件*/
+.c-ucenter{
+    height: 55px;
+    vertical-align: inherit;
+}
+.c-ucenter a{
+    box-shadow: none !important;
+}
+

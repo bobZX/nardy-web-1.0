@@ -1,8 +1,7 @@
 var Controller = require('../../common/controller');
-var tpl = require('../views/home.html');
-var button_group = require('../../component/button_group');
+var tpl = require('../views/app.html');
 
-var Home = Controller.instance('home',{
+var app = Controller.instance('app',{
     data:function(){
         return {
             type:'page',
@@ -10,7 +9,6 @@ var Home = Controller.instance('home',{
     },
     tpl:tpl,
     components:{
-        'button_group':button_group
     },
     watch:{
         'type':function(value,oldVal){
@@ -27,4 +25,4 @@ var Home = Controller.instance('home',{
     }
 })
 
-module.exports = Home;
+module.exports = app;
