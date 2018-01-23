@@ -23,18 +23,34 @@ var Utils = require('./utils.js');
  		this.$ele = document.getElementById(ele);
  }
 
- Router.prototype.route = function(path,handler){
- 	path = path.replace(/\s*/g,'');
- 	this.routes[path] = handler;
+ Router.prototype.route = function(options){
+ 	path = options.path.replace(/\s*/g,'');
+ 	this.routes[options.path] = {handler:options.component};
+	 if(options.children){
+		 for(var i=0,len = options.children.length;i<len;i++){
+			 var croute = options.children[i];
+			 this.routes[croute.path] = {handler:croute.component,parent:options.path};
+		 }
+	 }
  }
 
  Router.prototype.handle = function(params){ 	
  	if(this.routes.hasOwnProperty(params.path)){
- 		var handler = this.routes[params.path];
+		var route = this.routes[params.path];
+ 		var handler = route.handler;
 		if(!this.$ele)return;
  		if(Utils.isObject(handler)){
 			if(handler.hasOwnProperty('initialize')){
-				this.$ele.innerHTML = handler.initialize(params.query);
+				if(route.parent){
+					var pHandler = this.routes[route.parent].handler;
+					this.$ele.innerHTML = pHandler.initialize();
+					var pid = pHandler._id;
+					var $pEle = document.getElementsByName(pid)[0];
+					var $cEle = $pEle.getElementsByTagName('router-view')[0];
+					$cEle.innerHTML = handler.initialize(params.query);
+				}else{
+					this.$ele.innerHTML = handler.initialize();
+				}
 			}
  		}else if(Utils.isFunction(handler)){
 			this.$ele.innerHTML = handler.call(params.query);

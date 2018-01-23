@@ -261,17 +261,17 @@ Controller.prototype.rerender = function(id){
 Controller.instance = function(name,options){
     var _ids = [];
     return {
+        _id: null,
         initialize:function(data,id){
-            var _id;
             if(!id||id=='undefined'){
-                _id = options._id_ = 'nd_'+(cid++);
+                this._id = options._id_ = 'nd_'+(cid++);
             }else{
-                _id = options._id_ = id;
+                this._id = options._id_ = id;
             }
-            _ids.push(_id);
+            _ids.push(this._id);
+            options._propDatas_ = data;
             options.name = name;
             var c = new Controller(options);
-            if(data)c.data = Utils.extend(c.data,data);
             return c.view;
         },
         destroy:function(){
@@ -307,7 +307,7 @@ Controller.component = function(name,options){
             return c;
         }
     }
-}
+};
 
 /**
  * 数据对象依赖
@@ -360,36 +360,8 @@ Watcher.prototype = {
         Depend.watcher = null;
         return value;
     }
-}
+};
 
-/**
- * 获取子模板对象的属性集合（弃用）
- * @param children
- * @param prop
- * @param result
- * @returns {*}
- */
-function getChildProp(children,prop,result){
-    if(result&&Utils.isObject(children)){
-        Utils.each(children,function(child,name){
-            if(Utils.isObject(child)&&child.hasOwnProperty(prop)){
-                var o;
-                if(Utils.isObject(child[prop])){
-                    o = child[prop];
-                }else{
-                    o = new Object();
-                    o[name] = child[prop];
-                }
-                result = Utils.extend(result,o);
-            }else{
-                return result;
-            }
-            if(child.hasOwnProperty('components')){
-                getChildProp(child['components'],prop,result);
-            }
-        })
-        return result;
-    }
-}
+
 
 module.exports = Controller;

@@ -13,7 +13,7 @@ textarea{resize:none;}
 :-moz-placeholder {color:#ccc;}
 ::-moz-placeholder {color:#ccc;}
 :-ms-input-placeholder {color:#ccc;}
-router-view {display:block}
+router-view {display:block;background-color: #fff;}
 
 
 /*font*/
@@ -44,4 +44,4 @@ router-view {display:block}
 
 .icon-yonghu:before { content: "\e53c"; }
 
-.icon-jiaoseguanli:before { content: "\e60f"; }
+.icon-jiaose:before { content: "\e60f"; }
