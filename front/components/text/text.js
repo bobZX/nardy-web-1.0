@@ -1,4 +1,4 @@
-var Controller = require('../common/controller');
+var Controller = require('../../common/controller');
 var tpl = require('./text.html');
 
 var text = Controller.component('text',{

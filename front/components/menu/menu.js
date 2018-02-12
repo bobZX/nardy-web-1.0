@@ -1,4 +1,4 @@
-var Controller = require('../common/controller');
+var Controller = require('../../common/controller');
 var tpl = require('./menu.html');
 
 var Menu = Controller.component('menu',{

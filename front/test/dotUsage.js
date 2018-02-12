@@ -1,6 +1,6 @@
 var Controller = require('../common/controller');
 var tpl = require('./dotUsage.html');
-var text = require('../component/text');
+var text = require('../components/text/text');
 
 var dotUsage = Controller.component('dotUsage',{
     data:function(){

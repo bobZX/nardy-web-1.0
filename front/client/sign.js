@@ -4,8 +4,8 @@ var SignIn = require('./js/signin');
 var SignUp = require('./js/signup');
 
 var router = new Router();
-router.route('in',SignIn);
-router.route('up',SignUp);
+router.route({path:'in',component:SignIn});
+router.route({path:'up',component:SignUp});
 router.initialize();
 var app = new Controller({
     ele:'container',

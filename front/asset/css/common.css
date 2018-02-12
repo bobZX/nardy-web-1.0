@@ -13,7 +13,7 @@ textarea{resize:none;}
 :-moz-placeholder {color:#ccc;}
 ::-moz-placeholder {color:#ccc;}
 :-ms-input-placeholder {color:#ccc;}
-router-view {display:block;background-color: #fff;}
+router-view {display:block;}
 
 
 /*font*/
