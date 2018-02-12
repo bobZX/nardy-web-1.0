@@ -1,5 +1,5 @@
 var Controller = require('../../common/controller');
-var tpl = require('../views/signup.html');
+var tpl = require('./signup.html');
 
 /**
  * 页面-注册

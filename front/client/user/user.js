@@ -1,5 +1,5 @@
 var Controller = require('../../common/controller');
-var tpl = require('../views/user.html');
+var tpl = require('./user.html');
 
 var user = Controller.instance('user',{
     tpl: tpl,

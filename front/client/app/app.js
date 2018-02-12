@@ -1,8 +1,8 @@
 var Controller = require('../../common/controller');
 var Utils = require('../../common/utils');
-var tpl = require('../views/app.html');
-var step1 = require('../views/step/step1.html');
-var step2 = require('../views/step/step2.html');
+var tpl = require('./app.html');
+var step1 = require('./step/step1.html');
+var step2 = require('./step/step2.html');
 
 /**
  * 页面-应用

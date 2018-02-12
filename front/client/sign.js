@@ -1,7 +1,7 @@
 var Controller = require('../common/controller');
 var Router = require('../common/router');
-var SignIn = require('./js/signin');
-var SignUp = require('./js/signup');
+var SignIn = require('./signin/signin');
+var SignUp = require('./signup/signup');
 
 var router = new Router();
 router.route({path:'in',component:SignIn});
