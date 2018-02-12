@@ -1,5 +1,4 @@
 # nardy-web-1.0
-*******
 ## 部署：  
 &gt; npm install  
 &gt; gulp  
