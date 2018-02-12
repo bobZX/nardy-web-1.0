@@ -1,2 +1,10 @@
 # nardy-web-1.0
-nardy web front code version 1.0,use nodejs,express,jquery,webpack,gulp etc.
+*******
+## 部署：  
+&gt; npm install  
+&gt; gulp  
+&gt; npm start  
+
+## 访问地址：  
+http://127.0.0.1:7000/sign#in  
+http://127.0.0.1:7000/main  
