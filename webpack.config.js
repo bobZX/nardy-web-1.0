@@ -5,14 +5,23 @@ module.exports = {
     cache: true,
     devtool: "#source-map",
     entry: {
-        amain:'./front/admin/main.js',
-		cmain:'./front/client/main.js'
+		main:'./front/client/main.js',
+        sign:'./front/client/sign.js',
+        testT:'./front/test/testT.js'
 	},
     output: {
         path: path.join(__dirname, "./front/dist/"),
         publicPath: "./front/dist/",
         filename: "[name].js",
         chunkFilename: "[chunkhash].js"
+    },
+    module: {
+        loaders: [
+            //{ test: /\.js$/, loader: 'babel-loader' ,exclude: /node_modules/},
+            //{ test: /\.css$/, loader: 'style-loader!css-loader'},
+            { test: /\.(html|tpl)$/, loader: 'html-loader' },
+            { test: /\.(png|jpg)$/, loader: "url-loader" }
+        ]
     },
     resolve: {
         alias: {
